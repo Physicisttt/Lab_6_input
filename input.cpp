@@ -54,13 +54,16 @@ public:
 			try
 			{
 				flag = false;
-				a.value = stoi(temp);
 
-				string check;
-				check = to_string(a.value);
-				if (check.size() < temp.size())
+
+				size_t position = 0;
+				size_t* address = &position;
+
+				a.value = stoi(temp, address);
+
+				if (position < temp.size())
 				{
-					throw 1;
+					throw std::string("something hadn't been read! try again...");
 				}
 			}
 			catch (const std::invalid_argument)
@@ -73,10 +76,10 @@ public:
 				flag = true;
 				std::cerr << "entered value is out of range for <int> type! try again..." << endl;
 			}
-			catch (int a)//catch (string MyExeption)
+			catch (string s)//catch (string MyExeption)
 			{
 				flag = true;
-				std::cerr << "something hadn't been read! try again..." << endl;
+				std::cerr << s << endl;
 			}
 		}
 
