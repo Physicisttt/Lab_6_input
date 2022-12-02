@@ -37,6 +37,15 @@ int SelectData()
 	return number;
 }
 
+class BaseType
+{
+public:
+
+	BaseType() {}
+
+	virtual istream& operator>> (istream& strm) = 0;
+};
+
 class MyInt
 {
 public:
@@ -92,10 +101,50 @@ class MyDouble
 {
 public:
 	double value;
+	
+
+	MyDouble(double input) : value(input) {}
 
 	friend istream& operator>> (istream& strm, MyDouble& a)
 	{
-		return std::cin >> a.value;
+		string temp;
+		bool flag = true;
+		while (flag)
+		{
+			std::cin >> temp;
+			try
+			{
+				flag = false;
+
+
+				size_t position = 0;
+				size_t* address = &position;
+
+				a.value = stod(temp, address);
+
+				if (position < temp.size())
+				{
+					throw std::string("something hadn't been read! try again...");
+				}
+			}
+			catch (const std::invalid_argument)
+			{
+				flag = true;
+				std::cerr << "invalid argument! try again..." << endl;
+			}
+			catch (const std::out_of_range)
+			{
+				flag = true;
+				std::cerr << "entered value is out of range for <int> type! try again..." << endl;
+			}
+			catch (string s)//catch (string MyExeption)
+			{
+				flag = true;
+				std::cerr << s << endl;
+			}
+		}
+
+		return strm;
 	}
 };
 
@@ -419,6 +468,25 @@ int main(void)
 		cout << ttt.value << " is NOT greater than " << IntValIG.assignedvalue << endl;
 	}
 
+
+	MyDouble ddd(5);
+
+	cout << "enter double value --->";
+	cin >> ddd;
+
+	cout << "value = " << ddd.value << endl;
+
+	DoubleValidatorIsGreater DoubleValIG;
+	DoubleValIG.assignedvalue = 100.0;
+
+	if (DoubleValIG.Check(ddd.value))
+	{
+		cout << ddd.value << " is greater than " << IntValIG.assignedvalue << endl;
+	}
+	else
+	{
+		cout << ddd.value << " is NOT greater than " << IntValIG.assignedvalue << endl;
+	}
 
 	return 0;
 }
