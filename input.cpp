@@ -46,8 +46,43 @@ public:
 
 	friend istream& operator>> (istream& strm, MyInt& a)
 	{
-		return std::cin >> a.value;
+		string temp;
+		bool flag = true;
+		while (flag)
+		{
+			std::cin >> temp;
+			try
+			{
+				flag = false;
+				a.value = stoi(temp);
+
+				string check;
+				check = to_string(a.value);
+				if (check.size() < temp.size())
+				{
+					throw 1;
+				}
+			}
+			catch (const std::invalid_argument)
+			{
+				flag = true;
+				std::cerr << "invalid argument! try again..." << endl;
+			}
+			catch (const std::out_of_range)
+			{
+				flag = true;
+				std::cerr << "entered value is out of range for <int> type! try again..." << endl;
+			}
+			catch (int a)//catch (string MyExeption)
+			{
+				flag = true;
+				std::cerr << "something hadn't been read! try again..." << endl;
+			}
+		}
+
+		return strm;
 	}
+
 };
 
 class MyDouble
@@ -285,7 +320,9 @@ int main(void)
 
 	//getline(cin, str);
 
-	str = "2326 443 35";
+	cin >> str;
+
+	//str = "2326 443 35";
 	while (!str.empty())
 	{
 		inum = stoi(str, address);//to integer
@@ -319,7 +356,7 @@ int main(void)
 
 	//cout << "enter string --->";
 	//getline(cin, IntTest);
-
+	
 ////////////////////////IntValidator test///////////////////////////
 
 	IntValidatorIsGreater IntValIG;
