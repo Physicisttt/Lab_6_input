@@ -9,12 +9,16 @@ class BaseIntValidator
 {
 public:
 	virtual bool Check(int input) = 0;
+
+	virtual void printCondition() = 0;
 };
 
 class BaseDoubleValidator
 {
 public:
 	virtual bool Check(double input) = 0;
+
+	virtual void printCondition() = 0;
 };
 
 class BaseCharValidator
@@ -22,6 +26,8 @@ class BaseCharValidator
 public:
 
 	virtual bool Check(char input) = 0;
+
+	virtual void printCondition() = 0;
 };
 
 //////////////////////////////////////////////////////////
@@ -96,6 +102,15 @@ public:
 		IntValArray.push_back(IntVal);
 	}
 
+	void printValidatorConditions()
+	{
+		cout << "enter int value" << endl;
+		for (size_t i = 0; i < IntValArray.size(); i++)
+		{
+			IntValArray[i]->printCondition();
+		}
+	}
+
 	bool checker(int value)
 	{
 		bool isEverythingOK = true;
@@ -122,7 +137,9 @@ public:
 
 		while (!isEverythingOK)
 		{
-			cout << "you must enter normal value! ----->";
+			cout << endl << "you must enter normal value!" << endl;
+			printValidatorConditions();
+
 			string temp;
 			strm >> temp;
 
@@ -139,6 +156,8 @@ public:
 			isEverythingOK = checker(value);
 		}	
 	}
+
+	
 };
 
 class MyDouble : public BaseType
@@ -157,6 +176,15 @@ public:
 	void addDoubleValidator(BaseDoubleValidator* DoubleVal)
 	{
 		DoubleValArray.push_back(DoubleVal);
+	}
+
+	void printValidatorConditions()
+	{
+		cout << "enter double value" << endl;
+		for (size_t i = 0; i < DoubleValArray.size(); i++)
+		{
+			DoubleValArray[i]->printCondition();
+		}
 	}
 
 	bool checker(double value)
@@ -186,6 +214,8 @@ public:
 		while (!isEverythingOK)
 		{
 			cout << "you must enter normal value! ----->";
+			printValidatorConditions();
+
 			string temp;
 			strm >> temp;
 
@@ -222,6 +252,15 @@ public:
 		CharValArray.push_back(CharVal);
 	}
 
+	void printValidatorConditions()
+	{
+		cout << "enter char value" << endl;
+		for (size_t i = 0; i < CharValArray.size(); i++)
+		{
+			CharValArray[i]->printCondition();
+		}
+	}
+
 	bool checker(char value)
 	{
 		bool isEverythingOK = true;
@@ -249,6 +288,8 @@ public:
 		while (!isEverythingOK)
 		{
 			cout << "you must enter normal value! ----->";
+			printValidatorConditions();
+
 			string temp;
 			strm >> temp;
 
@@ -312,6 +353,11 @@ public:
 		
 		return false;
 	}
+
+	void printCondition()
+	{
+		cout << "value must be > " << assignedvalue << endl;
+	}
 	
 };
 
@@ -339,6 +385,11 @@ public:
 		return false;
 	}
 
+	void printCondition()
+	{
+		cout << "value must be < " << assignedvalue << endl;
+	}
+
 };
 
 class IntValidatorIsEqual : public BaseIntValidator
@@ -363,6 +414,11 @@ public:
 		}
 
 		return false;
+	}
+
+	void printCondition()
+	{
+		cout << "value must be == " << assignedvalue << endl;
 	}
 };
 
@@ -390,7 +446,10 @@ public:
 		return false;
 	}
 
-
+	void printCondition()
+	{
+		cout << "value must be in [" << leftborder << ";" << rightborder << "] " << endl;
+	}
 	
 };
 
@@ -416,6 +475,11 @@ public:
 		}
 
 		return false;
+	}
+
+	void printCondition()
+	{
+		cout << "value must be > " << assignedvalue << endl;
 	}
 
 };
@@ -444,6 +508,11 @@ public:
 		return false;
 	}
 
+	void printCondition()
+	{
+		cout << "value must be < " << assignedvalue << endl;
+	}
+
 };
 
 class DoubleValidatorIsEqual : public BaseDoubleValidator
@@ -468,6 +537,11 @@ public:
 		}
 
 		return false;
+	}
+
+	void printCondition()
+	{
+		cout << "value must be == " << assignedvalue << endl;
 	}
 };
 
@@ -494,6 +568,11 @@ public:
 		
 		return false;
 	}
+
+	void printCondition()
+	{
+		cout << "value must be == '" << assignedvalue << "' " << endl;
+	}
 };
 
 class CharValidatorIsDigit : public BaseCharValidator
@@ -516,6 +595,11 @@ public:
 		}
 
 		return false;
+	}
+
+	void printCondition()
+	{
+		cout << "value must be one of the digits: 0 1 2 3 4 5 6 7 8 9 " << endl;
 	}
 };
 
