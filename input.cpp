@@ -1,8 +1,30 @@
 #include <iostream>
 #include <string>
 #include <cctype>
+#include <vector>
 
 using namespace std;
+
+class BaseIntValidator
+{
+public:
+	virtual bool Check(int input) = 0;
+};
+
+class BaseDoubleValidator
+{
+public:
+	virtual bool Check(double input) = 0;
+};
+
+class BaseCharValidator
+{
+public:
+
+	virtual bool Check(char input) = 0;
+};
+
+//////////////////////////////////////////////////////////
 
 class BaseType
 {
@@ -27,6 +49,13 @@ private:
 			try
 			{
 				flag = false;
+				
+				char c = strm.peek();
+				if (c == 4)// CTRL+D
+				{
+					break;
+				}
+
 				reader(strm);
 			}
 			catch (const std::invalid_argument)
@@ -52,70 +81,187 @@ private:
 class MyInt : public BaseType
 {
 public:
-	int value;
+	int value = 0;
+
+	vector<BaseIntValidator*> IntValArray;
 	
 	MyInt() {}
 
 	MyInt(int input) : value(input) {}
 
-	void reader(istream& strm) override
-	{
-		string temp;
-		strm >> temp;
-		size_t position = 0;
-		value = stoi(temp, &position);
+	//MyInt(vector<BaseIntValidator> IntValArray) {}
 
-		if (position < temp.size())
-		{
-			throw std::string("something hadn't been read! try again...");
-		}
+	void addIntValidator(BaseIntValidator* IntVal)
+	{
+		IntValArray.push_back(IntVal);
 	}
 
+	bool checker(int value)
+	{
+		bool isEverythingOK = true;
+
+		for (size_t i = 0; i < IntValArray.size(); i++)
+		{
+			if (IntValArray[i]->Check(value))
+			{
+				cout << "validator #" << i << " used. ----> true" << endl << endl;
+			}
+			else
+			{
+				cout << "validator #" << i << " used. ----> false" << endl << endl;
+				isEverythingOK = false;
+			}
+		}
+
+		return isEverythingOK;
+	}
+
+	void reader(istream& strm) override
+	{
+		bool isEverythingOK = false;
+
+		while (!isEverythingOK)
+		{
+			cout << "you must enter normal value! ----->";
+			string temp;
+			strm >> temp;
+
+			cout << endl;
+
+			size_t position = 0;
+			value = stoi(temp, &position);
+
+			if (position < temp.size())
+			{
+				throw std::string("something hadn't been read! try again...");
+			}
+
+			isEverythingOK = checker(value);
+		}	
+	}
 };
 
 class MyDouble : public BaseType
 {
 public:
-	double value;
+	double value = 0;
+
+	vector<BaseDoubleValidator*> DoubleValArray;
 
 	MyDouble() {}
 
 	MyDouble(double input) : value(input) {}
 
+	//MyDouble(vector<BaseDoubleValidator> DoubleValidatorArray) {}
+
+	void addDoubleValidator(BaseDoubleValidator* DoubleVal)
+	{
+		DoubleValArray.push_back(DoubleVal);
+	}
+
+	bool checker(double value)
+	{
+		bool isEverythingOK = true;
+
+		for (size_t i = 0; i < DoubleValArray.size(); i++)
+		{
+			if (DoubleValArray[i]->Check(value))
+			{
+				cout << "validator #" << i << " used. ----> true" << endl << endl;
+			}
+			else
+			{
+				cout << "validator #" << i << " used. ----> false" << endl << endl;
+				isEverythingOK = false;
+			}
+		}
+
+		return isEverythingOK;
+	}
+
 	void reader(istream& strm) override
 	{
-		string temp;
-		strm >> temp;
-		size_t position = 0;
-		value = stod(temp, &position);
+		bool isEverythingOK = false;
 
-		if (position < temp.size())
+		while (!isEverythingOK)
 		{
-			throw std::string("something hadn't been read! try again...");
-		}					
+			cout << "you must enter normal value! ----->";
+			string temp;
+			strm >> temp;
+
+			cout << endl;
+
+			size_t position = 0;
+			value = stod(temp, &position);
+
+			if (position < temp.size())
+			{
+				throw std::string("something hadn't been read! try again...");
+			}
+
+			isEverythingOK = checker(value);
+		}				
 	}
 };
 
 class MyChar : public BaseType
 {
 public:
-	char value;
+	char value = 0;
+
+	vector<BaseCharValidator*> CharValArray;
 
 	MyChar() {}
-
+	
 	MyChar(char input) : value(input) {}
+
+	//MyChar(vector<BaseCharValidator> CharValidatorArray) {}
+
+	void addCharValidator(BaseCharValidator* CharVal)
+	{
+		CharValArray.push_back(CharVal);
+	}
+
+	bool checker(char value)
+	{
+		bool isEverythingOK = true;
+
+		for (size_t i = 0; i < CharValArray.size(); i++)
+		{
+			if (CharValArray[i]->Check(value))
+			{
+				cout << "validator #" << i << " used. ----> true" << endl << endl;
+			}
+			else
+			{
+				cout << "validator #" << i << " used. ----> false" << endl << endl;
+				isEverythingOK = false;
+			}
+		}
+
+		return isEverythingOK;
+	}
 
 	void reader(istream& strm) override
 	{
-		string temp;
-		strm >> temp;
+		bool isEverythingOK = false;
 
-		if (temp.size() > 1)
+		while (!isEverythingOK)
 		{
-			throw std::string("you entered more than 1 symbol, invalid input! try again...");
+			cout << "you must enter normal value! ----->";
+			string temp;
+			strm >> temp;
+
+			if (temp.size() > 1)
+			{
+				throw std::string("you entered more than 1 symbol, invalid input! try again...");
+			}
+
+			value = temp[0];
+
+			isEverythingOK = checker(value);
 		}
 
-		value = temp[0];
 	}
 	
 };
@@ -141,24 +287,7 @@ public:
 }
 */
 
-class BaseIntValidator
-{
-public:
-	virtual bool Check(int input) = 0;
-};
-
-class BaseDoubleValidator
-{
-public:
-	virtual bool Check(double input) = 0;
-};
-
-class BaseCharValidator
-{
-public:
-
-	virtual bool Check(char input) = 0;
-};
+//////////////////////////////////////////////////////////
 
 class IntValidatorIsGreater : public BaseIntValidator
 {
@@ -173,7 +302,12 @@ public:
 	{
 		if (input > assignedvalue)
 		{
+			cout << "IntValidatorIsGreater: " << input << " is greater than " << assignedvalue << endl;
 			return true;
+		}
+		else
+		{
+			cout << "IntValidatorIsGreater: " << input << " is NOT greater than " << assignedvalue << endl;
 		}
 		
 		return false;
@@ -194,7 +328,12 @@ public:
 	{
 		if (input < assignedvalue)
 		{
+			cout << "IntValidatorIsLess: " << input << " is less than " << assignedvalue << endl;
 			return true;
+		}
+		else
+		{
+			cout << "IntValidatorIsLess: " << input << " is NOT less than " << assignedvalue << endl;
 		}
 
 		return false;
@@ -215,7 +354,12 @@ public:
 	{
 		if (input == assignedvalue)
 		{
+			cout << "IntValidatorIsEqual: " << input << " is equal to " << assignedvalue << endl;
 			return true;
+		}
+		else
+		{
+			cout << "IntValidatorIsEqual: " << input << " is NOT equal to " << assignedvalue << endl;
 		}
 
 		return false;
@@ -231,11 +375,16 @@ public:
 	IntValidatorInInterval() {}
 	IntValidatorInInterval(int left, int right) : leftborder(left), rightborder(right) {}
 
-	bool Check(int input)
+	bool Check(int input) override
 	{
 		if ((input >= leftborder) && (input <= rightborder))
 		{
+			cout << "IntValidatorInInterval: " << input << " is in interval [" << leftborder << "; " << rightborder << "]" << endl;
 			return true;
+		}
+		else
+		{
+			cout << "IntValidatorInInterval: " << input << " is NOT in interval [" << leftborder << "; " << rightborder << "]" << endl;
 		}
 
 		return false;
@@ -258,7 +407,12 @@ public:
 	{
 		if (input > assignedvalue)
 		{
+			cout << "DoubleValidatorIsGreater: " << input << " is greater than " << assignedvalue << endl;
 			return true;
+		}
+		else
+		{
+			cout << "DoubleValidatorIsGreater: " << input << " is NOT greater than " << assignedvalue << endl;
 		}
 
 		return false;
@@ -279,12 +433,42 @@ public:
 	{
 		if (input < assignedvalue)
 		{
+			cout << "DoubleValidatorIsLess: " << input << " is less than " << assignedvalue << endl;
 			return true;
+		}
+		else
+		{
+			cout << "DoubleValidatorIsLess: " << input << " is NOT less than " << assignedvalue << endl;
 		}
 
 		return false;
 	}
 
+};
+
+class DoubleValidatorIsEqual : public BaseDoubleValidator
+{
+public:
+	double assignedvalue;
+
+	DoubleValidatorIsEqual() {}
+
+	DoubleValidatorIsEqual(double assigned) : assignedvalue(assigned) {}
+
+	bool Check(double input) override
+	{
+		if (input == assignedvalue)
+		{
+			cout << "DoubleValidatorIsEqual: " << input << " is equal to " << assignedvalue << endl;
+			return true;
+		}
+		else
+		{
+			cout << "DoubleValidatorIsEqual: " << input << " is NOT equal to " << assignedvalue << endl;
+		}
+
+		return false;
+	}
 };
 
 class CharValidatorIsEqual : public BaseCharValidator
@@ -300,7 +484,12 @@ public:
 	{
 		if (input == assignedvalue)
 		{
+			cout << "CharValidatorIsEqual: " << input << " is equal to " << assignedvalue << endl;
 			return true;
+		}
+		else
+		{
+			cout << "CharValidatorIsEqual: " << input << " is NOT equal to " << assignedvalue << endl;
 		}
 		
 		return false;
@@ -318,7 +507,12 @@ public:
 	{
 		if (isdigit(input))
 		{
+			cout << "CharValidatorIsDigit: '" << input << "' is digit" << endl;
 			return true;
+		}
+		else
+		{
+			cout << "CharValidatorIsDigit: '" << input << "' is NOT a digit" << endl;
 		}
 
 		return false;
@@ -329,14 +523,6 @@ public:
 
 int main(void)
 {
-
-	
-/*
-	int res;
-	res = SelectData();
-	cout << "res = " << res;
-*/
-
 /*
 	int inum;
 	double dnum;
@@ -375,20 +561,22 @@ int main(void)
 */
 
 ///////////////////////operator>> test///////////////////////////
+/*
+	
 
-	MyInt ttt;
+	//cout << "enter integer value --->";
+	//cin >> ttt;
 
-	cout << "enter integer value --->";
-	cin >> ttt;
-
-	cout << "value = " << ttt.value << endl;
+	//cout << "value = " << ttt.value << endl;
 
 	//string IntTest;
 
 	//cout << "enter string --->";
 	//getline(cin, IntTest);
-	
+*/	
 ////////////////////////IntValidator test///////////////////////////
+
+	MyInt ttt;
 
 	IntValidatorIsGreater IntValIG;
 	IntValidatorIsLess IntValIL;
@@ -397,117 +585,61 @@ int main(void)
 
 	IntValIG.assignedvalue = 100;
 	IntValIL.assignedvalue = 100;
-	IntValIE.assignedvalue = 100;
+	IntValIE.assignedvalue = 25;
 	IntValII.leftborder = 10;
 	IntValII.rightborder = 50;
-/*
-	if (IntValIG.Check(500))
-	{
-		cout << "this is greater!" << endl;
-	}
-	else
-	{
-		cout << "this is not greater!" << endl;
-	}
 
-	if (IntValIL.Check(50))
-	{
-		cout << "this is less!" << endl;
-	}
-	else
-	{
-		cout << "this is not less!" << endl;
-	}
+	//ttt.addIntValidator(&IntValIG);
+	ttt.addIntValidator(&IntValIL);
+	ttt.addIntValidator(&IntValIE);
+	ttt.addIntValidator(&IntValII);
 
-	if (IntValIE.Check(100))
-	{
-		cout << "this is equal!" << endl;
-	}
-	else
-	{
-		cout << "this is not equal!" << endl;
-	}
-
-	if (IntValII.Check(-50))
-	{
-		cout << "this is in interval!" << endl;
-	}
-	else
-	{
-		cout << "this is not in interval!" << endl;
-	}
-*/
-
-	if (IntValIG.Check(ttt.value))
-	{
-		cout << ttt.value << " is greater than "<< IntValIG.assignedvalue << endl;
-	}
-	else
-	{
-		cout << ttt.value << " is NOT greater than " << IntValIG.assignedvalue << endl;
-	}
+	//with validators now
+	cout << "enter integer value --->";
+	cin >> ttt;
 
 
-	////////////////////////////////////////////
+////////////////////////DoubleValidator test//////////////////////////////////////
 
-	//old
+	
 	MyDouble ddd;
 
+	DoubleValidatorIsGreater DoubleValIG;
+	DoubleValidatorIsLess DoubleValIL;
+	DoubleValidatorIsEqual DoubleValIE;
 
+	DoubleValIG.assignedvalue = 100.0;
+	DoubleValIL.assignedvalue = 100.0;
+	DoubleValIE.assignedvalue = 25.0;
 
+	//ddd.addDoubleValidator(&IntValIG);
+	ddd.addDoubleValidator(&DoubleValIL);
+	ddd.addDoubleValidator(&DoubleValIE);
 
+	//with validators now
 	cout << "enter double value --->";
 	cin >> ddd;
 
-	cout << "value = " << ddd.value << endl;
 
-	DoubleValidatorIsGreater DoubleValIG;
-	DoubleValIG.assignedvalue = 100.0;
+//////////////////////////CharValidator test////////////////////////////////////
 
-	if (DoubleValIG.Check(ddd.value))
-	{
-		cout << ddd.value << " is greater than " << IntValIG.assignedvalue << endl;
-	}
-	else
-	{
-		cout << ddd.value << " is NOT greater than " << IntValIG.assignedvalue << endl;
-	}
-
-
-	////////////////////////////////////////////
-	
 	MyChar kkk;
-
-	cout << "enter char value --->";
-	cin >> kkk;
-
-	cout << "value = " << kkk.value << endl;
-
 
 	CharValidatorIsEqual CharValIE;
 	CharValidatorIsDigit CharValID;
 
-	CharValIE.assignedvalue = 'y';
+	CharValIE.assignedvalue = '5';
 
-	if (CharValIE.Check(kkk.value))
-	{
-		cout << "the symbol --->" << kkk.value << "<--- is equal to --->" << CharValIE.assignedvalue << "<---" << endl;
-	}
-	else
-	{
-		cout << "the symbol --->" << kkk.value << "<--- is NOT equal to --->" << CharValIE.assignedvalue << "<---" << endl;
-	}
+	kkk.addCharValidator(&CharValIE);
+	kkk.addCharValidator(&CharValID);
+
+	//with validators now
+	cout << "enter char value --->";
+	cin >> kkk;
 
 
-	if (CharValID.Check(kkk.value))
-	{
-		cout << "the symbol --->" << kkk.value << "<--- is digit!" << endl;
-	}
-	else
-	{
-		cout << "the symbol --->" << kkk.value << "<--- is NOT a digit" << endl;
-	}
-	
+
+
 
 	return 0;
 }
