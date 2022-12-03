@@ -4,159 +4,120 @@
 
 using namespace std;
 
-int SelectData()
-{
-	cout << "Choose what you want to enter" << endl;
-
-	cout << "1 - int" << endl
-		<< "2 - double" << endl
-		<< "3 - char" << endl
-		<< "4 - string" << endl
-		<< endl;
-
-	cout << "Chosen: ----> ";
-
-	string s;
-	int number = 0;
-	
-	/*try
-	{
-		get;
-	}
-	catch (const exception& ex)
-	{
-		cout << e.what();
-	}*/
-
-	//cin >> number;
-
-	//base check on normal input
-
-	
-	
-	return number;
-}
-
 class BaseType
 {
 public:
 
 	BaseType() {}
 
-	virtual istream& operator>> (istream& strm) = 0;
+	virtual void reader(istream& strm /*, BaseType* this */) = 0;
+
+	friend istream& operator>> (istream& strm, BaseType& a)
+	{
+		a.readcycle(strm);
+		return strm;
+	}
+
+private:
+	void readcycle(istream& strm)
+	{			
+		bool flag = true;
+		while (flag)
+		{
+			try
+			{
+				flag = false;
+				reader(strm);
+			}
+			catch (const std::invalid_argument)
+			{
+				flag = true;
+				std::cerr << "invalid argument! try again..." << endl;
+			}
+			catch (const std::out_of_range)
+			{
+				flag = true;
+				std::cerr << "entered value is out of range for <int> type! try again..." << endl;
+			}
+			catch (string s)//catch (string MyExeption)
+			{
+				flag = true;
+				std::cerr << s << endl;
+			}
+		}
+	}
+
 };
 
-class MyInt
+class MyInt : public BaseType
 {
 public:
 	int value;
 	
+	MyInt() {}
+
 	MyInt(int input) : value(input) {}
 
-	friend istream& operator>> (istream& strm, MyInt& a)
+	void reader(istream& strm) override
 	{
 		string temp;
-		bool flag = true;
-		while (flag)
+		strm >> temp;
+		size_t position = 0;
+		value = stoi(temp, &position);
+
+		if (position < temp.size())
 		{
-			std::cin >> temp;
-			try
-			{
-				flag = false;
-
-
-				size_t position = 0;
-				size_t* address = &position;
-
-				a.value = stoi(temp, address);
-
-				if (position < temp.size())
-				{
-					throw std::string("something hadn't been read! try again...");
-				}
-			}
-			catch (const std::invalid_argument)
-			{
-				flag = true;
-				std::cerr << "invalid argument! try again..." << endl;
-			}
-			catch (const std::out_of_range)
-			{
-				flag = true;
-				std::cerr << "entered value is out of range for <int> type! try again..." << endl;
-			}
-			catch (string s)//catch (string MyExeption)
-			{
-				flag = true;
-				std::cerr << s << endl;
-			}
+			throw std::string("something hadn't been read! try again...");
 		}
-
-		return strm;
 	}
 
 };
 
-class MyDouble
+class MyDouble : public BaseType
 {
 public:
 	double value;
-	
+
+	MyDouble() {}
 
 	MyDouble(double input) : value(input) {}
 
-	friend istream& operator>> (istream& strm, MyDouble& a)
+	void reader(istream& strm) override
 	{
 		string temp;
-		bool flag = true;
-		while (flag)
+		strm >> temp;
+		size_t position = 0;
+		value = stod(temp, &position);
+
+		if (position < temp.size())
 		{
-			std::cin >> temp;
-			try
-			{
-				flag = false;
-
-
-				size_t position = 0;
-				size_t* address = &position;
-
-				a.value = stod(temp, address);
-
-				if (position < temp.size())
-				{
-					throw std::string("something hadn't been read! try again...");
-				}
-			}
-			catch (const std::invalid_argument)
-			{
-				flag = true;
-				std::cerr << "invalid argument! try again..." << endl;
-			}
-			catch (const std::out_of_range)
-			{
-				flag = true;
-				std::cerr << "entered value is out of range for <int> type! try again..." << endl;
-			}
-			catch (string s)//catch (string MyExeption)
-			{
-				flag = true;
-				std::cerr << s << endl;
-			}
-		}
-
-		return strm;
+			throw std::string("something hadn't been read! try again...");
+		}					
 	}
 };
 
-class MyChar
+class MyChar : public BaseType
 {
 public:
 	char value;
 
-	friend istream& operator>> (istream& strm, MyChar& a)
+	MyChar() {}
+
+	MyChar(char input) : value(input) {}
+
+	void reader(istream& strm) override
 	{
-		return std::cin >> a.value;
+		string temp;
+		strm >> temp;
+
+		if (temp.size() > 1)
+		{
+			throw std::string("you entered more than 1 symbol, invalid input! try again...");
+		}
+
+		value = temp[0];
 	}
+	
 };
 
 class MyString
@@ -346,6 +307,24 @@ public:
 	}
 };
 
+class CharValidatorIsDigit : public BaseCharValidator
+{
+public:
+	char assignedvalue;
+
+	CharValidatorIsDigit() {}
+
+	bool Check(char input) override
+	{
+		if (isdigit(input))
+		{
+			return true;
+		}
+
+		return false;
+	}
+};
+
 
 
 int main(void)
@@ -397,7 +376,7 @@ int main(void)
 
 ///////////////////////operator>> test///////////////////////////
 
-	MyInt ttt(5);
+	MyInt ttt;
 
 	cout << "enter integer value --->";
 	cin >> ttt;
@@ -469,7 +448,13 @@ int main(void)
 	}
 
 
-	MyDouble ddd(5);
+	////////////////////////////////////////////
+
+	//old
+	MyDouble ddd;
+
+
+
 
 	cout << "enter double value --->";
 	cin >> ddd;
@@ -487,6 +472,42 @@ int main(void)
 	{
 		cout << ddd.value << " is NOT greater than " << IntValIG.assignedvalue << endl;
 	}
+
+
+	////////////////////////////////////////////
+	
+	MyChar kkk;
+
+	cout << "enter char value --->";
+	cin >> kkk;
+
+	cout << "value = " << kkk.value << endl;
+
+
+	CharValidatorIsEqual CharValIE;
+	CharValidatorIsDigit CharValID;
+
+	CharValIE.assignedvalue = 'y';
+
+	if (CharValIE.Check(kkk.value))
+	{
+		cout << "the symbol --->" << kkk.value << "<--- is equal to --->" << CharValIE.assignedvalue << "<---" << endl;
+	}
+	else
+	{
+		cout << "the symbol --->" << kkk.value << "<--- is NOT equal to --->" << CharValIE.assignedvalue << "<---" << endl;
+	}
+
+
+	if (CharValID.Check(kkk.value))
+	{
+		cout << "the symbol --->" << kkk.value << "<--- is digit!" << endl;
+	}
+	else
+	{
+		cout << "the symbol --->" << kkk.value << "<--- is NOT a digit" << endl;
+	}
+	
 
 	return 0;
 }
