@@ -5,6 +5,14 @@
 
 using namespace std;
 
+enum InputMode
+{
+	First = 1,
+	Hand = First,
+	Auto,
+	Last
+};
+
 class BaseIntValidator
 {
 public:
@@ -35,10 +43,34 @@ public:
 class BaseType
 {
 public:
-
+	InputMode mode;
 	BaseType() {}
 
-	virtual void reader(istream& strm /*, BaseType* this */) = 0;
+	BaseType(InputMode setmode) 
+		: mode(setmode) {}
+
+	void printMode()
+	{
+		switch (mode)
+		{
+			case InputMode::Hand:
+			{
+				cout << "mode: Hand" << endl;
+				break;
+			}
+			case InputMode::Auto:
+			{
+				cout << "mode: Auto" << endl;
+				break;
+			}			
+			default:
+				break;
+		}
+	}
+
+	//virtual void reader(istream& strm /*, BaseType* this */) = 0;
+
+	virtual bool reader(istream& strm /*, BaseType* this */) = 0;
 
 	friend istream& operator>> (istream& strm, BaseType& a)
 	{
@@ -49,39 +81,66 @@ public:
 private:
 	void readcycle(istream& strm)
 	{			
-		bool flag = true;
-		while (flag)
+		bool normal_value_was_read = false;
+		while (normal_value_was_read == false)//normal_value_was_read == false --> continue
 		{
 			try
 			{
-				flag = false;
+				//reader(strm); old version 
 				
-				char c = strm.peek();
-				if (c == 4)// CTRL+D
-				{
-					break;
-				}
-
-				reader(strm);
+				// true - readed value has successfully passed all validators
+				// false - readed value failed at least one validator 
+				normal_value_was_read = reader(strm);
 			}
 			catch (const std::invalid_argument)
 			{
-				flag = true;
+				normal_value_was_read = false;
 				std::cerr << "invalid argument! try again..." << endl;
+				if (mode == InputMode::Auto)//if auto
+				{
+					break;
+				}
 			}
 			catch (const std::out_of_range)
 			{
-				flag = true;
+				normal_value_was_read = false;
 				std::cerr << "entered value is out of range for <int> type! try again..." << endl;
+				if (mode == InputMode::Auto)//if auto
+				{
+					break;
+				}
 			}
 			catch (string s)//catch (string MyExeption)
 			{
-				flag = true;
-				std::cerr << s << endl;
+				if (s == "something hadn't been read! try again...")
+				{
+					normal_value_was_read = false;
+					std::cerr << s << endl;
+					if (mode == InputMode::Auto)//if auto
+					{
+						break;
+					}
+				}
+
+				if (s == "you entered more than 1 symbol, invalid input!try again...")
+				{
+					normal_value_was_read = false;
+					std::cerr << s << endl;
+					if (mode == InputMode::Auto)//if auto
+					{
+						break;
+					}
+				}
+
+				if (s == "ctrl+d found. Shutting down...")
+				{
+					normal_value_was_read = false;
+					std::cerr << s << endl;
+					break;
+				}
 			}
 		}
 	}
-
 };
 
 class MyInt : public BaseType
@@ -95,7 +154,9 @@ public:
 
 	MyInt(int input) : value(input) {}
 
-	//MyInt(vector<BaseIntValidator> IntValArray) {}
+	MyInt(InputMode setmode)
+		:BaseType(setmode) {}
+
 
 	void addIntValidator(BaseIntValidator* IntVal)
 	{
@@ -131,30 +192,40 @@ public:
 		return isEverythingOK;
 	}
 
-	void reader(istream& strm) override
+	bool reader(istream& strm) override //void reader(istream& strm) override
 	{
-		bool isEverythingOK = false;
+		bool ValidatorsResult = false;
+		printValidatorConditions();
 
-		while (!isEverythingOK)
+		string temp;
+
+		cout << "type here (ctrl+d to stop): ";
+		strm >> temp;
+
+		cout << "YOU ENTERED ->" << temp << endl;
+		if (temp[0] == 4)
 		{
-			cout << endl << "you must enter normal value!" << endl;
-			printValidatorConditions();
+			std::cerr << "CTRL+D FOUND! EVACUATION!!!!" << endl;
+			
+			throw std::string("ctrl+d found. Shutting down...");
+			return false; // new version with boolean returned value
+		}
 
-			string temp;
-			strm >> temp;
+		cout << endl;
 
-			cout << endl;
+		size_t position = 0;
+		value = stoi(temp, &position);
 
-			size_t position = 0;
-			value = stoi(temp, &position);
+		if (position < temp.size())
+		{
+			throw std::string("something hadn't been read! try again...");
+		}
 
-			if (position < temp.size())
-			{
-				throw std::string("something hadn't been read! try again...");
-			}
+		ValidatorsResult = checker(value);
+		// true  - all validators returned TRUE
+		// false - at least one validator returned FALSE
 
-			isEverythingOK = checker(value);
-		}	
+		return ValidatorsResult;
 	}
 
 	
@@ -207,30 +278,39 @@ public:
 		return isEverythingOK;
 	}
 
-	void reader(istream& strm) override
+	bool reader(istream& strm) override //void
 	{
-		bool isEverythingOK = false;
+		bool ValidatorsResult = false;
+		printValidatorConditions();
 
-		while (!isEverythingOK)
+		string temp;
+		cout << "type here (ctrl+d to stop): ";
+		strm >> temp;
+
+		cout << "YOU ENTERED ->" << temp << endl;
+		if (temp[0] == 4)
 		{
-			cout << "you must enter normal value! ----->";
-			printValidatorConditions();
+			std::cerr << "CTRL+D FOUND! EVACUATION!!!!" << endl;
 
-			string temp;
-			strm >> temp;
+			throw std::string("ctrl+d found. Shutting down...");
+			return false; // new version with boolean returned value
+		}
 
-			cout << endl;
+		cout << endl;
 
-			size_t position = 0;
-			value = stod(temp, &position);
+		size_t position = 0;
+		value = stod(temp, &position);
 
-			if (position < temp.size())
-			{
-				throw std::string("something hadn't been read! try again...");
-			}
+		if (position < temp.size())
+		{
+			throw std::string("something hadn't been read! try again...");
+		}
 
-			isEverythingOK = checker(value);
-		}				
+		ValidatorsResult = checker(value);
+		// true  - all validators returned TRUE
+		// false - at least one validator returned FALSE
+
+		return ValidatorsResult;
 	}
 };
 
@@ -281,28 +361,38 @@ public:
 		return isEverythingOK;
 	}
 
-	void reader(istream& strm) override
+	bool reader(istream& strm) override // void
 	{
-		bool isEverythingOK = false;
+		bool ValidatorsResult = false;
+		printValidatorConditions();
 
-		while (!isEverythingOK)
+		//cout << "you must enter normal value! ----->";
+		//printValidatorConditions();
+
+		string temp;
+		cout << "type here (ctrl+d to stop): ";
+		strm >> temp;
+
+		cout << "YOU ENTERED ->" << temp << endl;
+		if (temp[0] == 4)
 		{
-			cout << "you must enter normal value! ----->";
-			printValidatorConditions();
-
-			string temp;
-			strm >> temp;
-
-			if (temp.size() > 1)
-			{
-				throw std::string("you entered more than 1 symbol, invalid input! try again...");
-			}
-
-			value = temp[0];
-
-			isEverythingOK = checker(value);
+			cout << "CTRL+D FOUND! EVACUATION!!!!" << endl;
+			throw std::string("ctrl+d found. Shutting down...");
+			return false; // new version with boolean returned value
 		}
 
+		if (temp.size() > 1)
+		{
+			throw std::string("you entered more than 1 symbol, invalid input! try again...");
+		}
+
+		value = temp[0];
+
+		ValidatorsResult = checker(value);		
+		// true  - all validators returned TRUE
+		// false - at least one validator returned FALSE
+
+		return ValidatorsResult;
 	}
 	
 };
@@ -644,6 +734,22 @@ int main(void)
 	}
 */
 
+
+/*
+	string str1;
+
+	cout << "enter anything --->";
+	char c1 = cin.peek();
+	char c2 = cin.peek();
+	cin >> str1;
+	//char c1 = cin.peek();
+
+	cout << "got (c1): " << c1 << endl;
+	cout << "got (c2): " << c2 << endl;
+*/
+
+
+
 ///////////////////////operator>> test///////////////////////////
 /*
 	
@@ -660,7 +766,8 @@ int main(void)
 */	
 ////////////////////////IntValidator test///////////////////////////
 
-	MyInt ttt;
+	MyInt ttt(InputMode::Hand);
+	MyInt ttt_auto(InputMode::Auto);
 
 	IntValidatorIsGreater IntValIG;
 	IntValidatorIsLess IntValIL;
@@ -678,9 +785,14 @@ int main(void)
 	ttt.addIntValidator(&IntValIE);
 	ttt.addIntValidator(&IntValII);
 
+	//ttt_auto.addIntValidator(&IntValIG);
+	ttt_auto.addIntValidator(&IntValIL);
+	ttt_auto.addIntValidator(&IntValIE);
+	ttt_auto.addIntValidator(&IntValII);
+
 	//with validators now
-	cout << "enter integer value --->";
-	cin >> ttt;
+	cout << "	Integer test" << endl;
+	cin >> ttt_auto;
 
 
 ////////////////////////DoubleValidator test//////////////////////////////////////
@@ -701,8 +813,8 @@ int main(void)
 	ddd.addDoubleValidator(&DoubleValIE);
 
 	//with validators now
-	cout << "enter double value --->";
-	cin >> ddd;
+	cout << "	Double test" << endl;
+	//cin >> ddd;
 
 
 //////////////////////////CharValidator test////////////////////////////////////
@@ -718,8 +830,8 @@ int main(void)
 	kkk.addCharValidator(&CharValID);
 
 	//with validators now
-	cout << "enter char value --->";
-	cin >> kkk;
+	cout << "	Char test" << endl;
+	//cin >> kkk;
 
 
 
